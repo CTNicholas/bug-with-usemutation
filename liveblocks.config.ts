@@ -3,6 +3,7 @@ import { createRoomContext } from "@liveblocks/react";
 
 const client = createClient({
   authEndpoint: "/api/liveblocks-auth",
+  enableDebugLogging: true
 });
 
 // Presence represents the properties that will exist on every User in the Room
@@ -18,6 +19,7 @@ type Presence = {
 // LiveList, LiveMap, LiveObject instances, for which updates are
 // automatically persisted and synced to all connected clients.
 type Storage = {
+  hey: string
   // animals: LiveList<string>,
   // ...
 };
@@ -37,9 +39,12 @@ type UserMeta = {
 // room. Must be JSON-serializable.
 // type RoomEvent = {};
 
-export const { RoomProvider, useOthers, useSelf } = createRoomContext<
-  Presence,
-  Storage,
-  UserMeta
-  /* RoomEvent */
->(client);
+export const {
+  suspense: {
+    RoomProvider,
+    useOthers,
+    useSelf,
+    useMutation,
+    useStatus
+  }
+} = createRoomContext<Presence, Storage, UserMeta /* RoomEvent */>(client);

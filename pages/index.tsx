@@ -1,44 +1,36 @@
-import React, { useMemo } from "react";
-import { Avatar } from "../components/Avatar";
-import { RoomProvider, useOthers, useSelf } from "../liveblocks.config";
-import { useRouter } from "next/router";
-import styles from "./index.module.css";
-
-function Example() {
-  const users = useOthers();
-  const currentUser = useSelf();
-  const hasMoreUsers = users.length > 3;
-
-  return (
-    <main className="flex h-screen w-full select-none place-content-center place-items-center">
-      <div className="flex pl-3">
-        {users.slice(0, 3).map(({ connectionId, info }) => {
-          return (
-            <Avatar key={connectionId} src={info.avatar} name={info.name} />
-          );
-        })}
-
-        {hasMoreUsers && <div className={styles.more}>+{users.length - 3}</div>}
-
-        {currentUser && (
-          <div className="relative ml-8 first:ml-0">
-            <Avatar src={currentUser.info.avatar} name="You" />
-          </div>
-        )}
-      </div>
-    </main>
-  );
-}
+import { RoomProvider, useMutation, useOthers, useStatus } from "../liveblocks.config";
+import { ClientSideSuspense } from "@liveblocks/react";
 
 export default function Page() {
-  const roomId = useOverrideRoomId("nextjs-live-avatars");
-
   return (
-    <RoomProvider id={roomId} initialPresence={{}}>
-      <Example />
+    <RoomProvider id="my-new-room-id" initialPresence={{}}>
+      <ClientSideSuspense fallback={"load"}>
+        {() => <Mutations />}
+      </ClientSideSuspense>
     </RoomProvider>
   );
 }
+
+function Mutations() {
+  const status = useStatus()
+  const others = useOthers()
+  const mutate = useMutation(({ storage }) => {
+    console.log("run")
+  }, [])
+
+  return(
+    <div>
+      <button onClick={() => mutate("hello")}>click</button>
+      <div>status: {status}</div>
+      <div>{others.length} others are online</div>
+    </div>
+  );
+}
+
+
+
+
+
 
 export async function getStaticProps() {
   const API_KEY = process.env.LIVEBLOCKS_SECRET_KEY;
@@ -53,17 +45,4 @@ export async function getStaticProps() {
   }
 
   return { props: {} };
-}
-
-/**
- * This function is used when deploying an example on liveblocks.io.
- * You can ignore it completely if you run the example locally.
- */
-function useOverrideRoomId(roomId: string) {
-  const { query } = useRouter();
-  const overrideRoomId = useMemo(() => {
-    return query?.roomId ? `${roomId}-${query.roomId}` : roomId;
-  }, [query, roomId]);
-
-  return overrideRoomId;
 }
